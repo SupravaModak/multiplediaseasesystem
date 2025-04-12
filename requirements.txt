@@ -8,4 +8,5 @@ protobuf==4.25.3
 transformers
 torch
 Pillow
-PyMuPDF transformers
+PyMuPDF 
+transformers
