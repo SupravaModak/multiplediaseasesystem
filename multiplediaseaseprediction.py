@@ -1,201 +1,237 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed Mar 19 20:45:02 2025
-
-@author: Suprava Modak
-"""
 import pickle
 import streamlit as st
+import numpy as np
 from streamlit_option_menu import option_menu
+import google.generativeai as genai
 
-diabetes_model=pickle.load(open('diabetes_model.sav','rb'))
-heart_model=pickle.load(open('heart_model.sav','rb'))
-parkinsons_model=pickle.load(open('parkinsons_model.sav','rb'))
+# Load models
+diabetes_model = pickle.load(open('diabetes_model.sav', 'rb'))
+heart_model = pickle.load(open('heart_model.sav', 'rb'))
+parkinsons_model = pickle.load(open('parkinsons_model.sav', 'rb'))
+
+# Initialize Gemini
+import google.generativeai as genai
+
+# Configure Gemini with your API key
+genai.configure(api_key=st.secrets["gemini_api_key"])  # or paste your key directly
+
+# Create Gemini model instance
+model = genai.GenerativeModel(model_name="models/gemini-1.5-flash")
+
+def get_chatbot_response(prompt):
+    try:
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 
+# Sidebar menu
 with st.sidebar:
-    selected=option_menu('Multiple Disease Prediction System', 
-                         ['Diabetes Prediction',
-                          'Heart Diasease Prediction',
-                          'Parkinsons Prediction'],
-                         icons=['activity','heart','person'],
-                         default_index=0)
-    
-    
-if(selected== 'Diabetes Prediction'):
-    st.title('Diabetes Prediction using ML')
-    
-    
-    
-    col1,col2,col3=st.columns(3)
-    
-    with col1:
-        Pregnancies=st.text_input('Number of Pregnancies')
-    with col2:
-        Glucose=st.text_input('Glucose Level')
-    with col3:
-        BloodPressure=st.text_input('Blood Pressure Value')
-    with col1:
-        SkinThickness=st.text_input('Skin Thickness Value')
-    with col2:
-        Insulin=st.text_input('Insulin Level')
-    with col3:
-        BMI=st.text_input('BMI Value')
-    with col1:
-        DiabetesPedigreeFunction=st.text_input('Diabetes Pedigree Function Value')
-    with col2:
-        Age=st.text_input('Age of the Person')
-    
-    
-   
-   
-   
-    
-    diab_diagnosis=''
-    
-    if st.button('Diabetes Test Result'):
-        diab_prediction=diabetes_model.predict([[Pregnancies, Glucose, BloodPressure, SkinThickness, Insulin, BMI, DiabetesPedigreeFunction, Age ]])
-    
-        if(diab_prediction[0]==1):
-            diab_diagnosis='The person is Diabetic'
-        else:
-            diab_diagnosis='The person is not Diabetic'
-    
-    st.success(diab_diagnosis)
-    
-if(selected== 'Heart Diasease Prediction'):
-    st.title('Heart Diasease Prediction using ML')
-    
-    col1,col2,col3=st.columns(3)
-    
-    with col1:
-        age=st.text_input('Age of Person')
-    with col2:
-        sex=st.text_input('1 for Male , 0 for Female')
-    with col3:
-        cp=st.text_input('Chest Pain Types')
-    with col1:
-        trestbps=st.text_input('Resting Blood Pressure')
-    with col2:
-        chol=st.text_input('Serum Cholesterol in mg/dL')
-    with col3:
-        fbs=st.text_input('Fasting Blood sugar>120 mg/dL')
-    with col1:
-        restecg=st.text_input('Resting Electrocardiographic results')
-    with col2:
-        thalach=st.text_input('Maximum Heart Rate Achieved')
-    with col3:
-        exang=st.text_input('Exercise Induced Angina')
-    with col1:
-        oldpeak=st.text_input('ST depression induced by exercise')
-    with col2:
-        slope=st.text_input('Slope of the peak exercise ST segment')
-    with col3:
-        ca=st.text_input('Major Vessels Colored by Flourosopy')
-    with col1:
-        thal=st.text_input('Thalassemia')
-    
-    
-   
-   
-   
-    
-    heart_diagnosis=''
-    
-    if st.button('Heart Diasease Test Result'):
-        heart_prediction=heart_model.predict([[age,sex,cp,trestbps,chol,fbs,restecg,thalach,exang,oldpeak,slope,ca,thal]])
-    
-        if(heart_prediction[0]==1):
-            heart_diagnosis='The person is suffering from Heart Diasease'
-        else:
-            heart_diagnosis='The person is not suffering from Heart Diasease'
-    
-    st.success(heart_diagnosis)
-    
-if(selected== 'Parkinsons Prediction'):
-    st.title('Parkinsons Prediction using ML')
-    
-    
-    st.markdown("#### *Fundamental Frequency Features*")
-     
-    col1,col2,col3=st.columns(3)
-    with col1:
-        MDVP_Fo_Hz = st.number_input("MDVP:Fo(Hz) - Average fundamental frequency", min_value=50.0, max_value=300.0, step=0.1)
-    with col2:
-        MDVP_Fhi_Hz = st.number_input("MDVP:Fhi(Hz) - Maximum fundamental frequency", min_value=50.0, max_value=600.0, step=0.1)
-    with col3:
-        MDVP_Flo_Hz = st.number_input("MDVP:Flo(Hz) - Minimum fundamental frequency", min_value=50.0, max_value=300.0, step=0.1)
-   
-    st.markdown("#### *Variation in Fundamental Frequency*")
-    col1,col2,col3=st.columns(3)
-    with col1:
-       MDVP_Jitter = st.number_input("MDVP:Jitter(%)", min_value=0.0, max_value=0.1, step=0.0001, format="%.4f")
-    with col2:
-       MDVP_Jitter_Abs = st.number_input("MDVP:Jitter(Abs)", min_value=0.0, max_value=0.005, step=0.0001, format="%.4f")
-    with col3:
-       MDVP_RAP = st.number_input("MDVP:RAP", min_value=0.0, max_value=0.1, step=0.0001, format="%.4f")
-    with col1:
-       MDVP_PPQ = st.number_input("MDVP:PPQ", min_value=0.0, max_value=0.1, step=0.0001, format="%.4f")
-    with col2:
-       Jitter_DDP = st.number_input("Jitter:DDP", min_value=0.0, max_value=0.1, step=0.0001, format="%.4f")
-   
-    st.markdown("#### *Variation in Amplitude*")
-    col1,col2,col3=st.columns(3)
-    with col1:
-       MDVP_Shimmer = st.number_input("MDVP:Shimmer", min_value=0.0, max_value=1.0, step=0.01)
-    with col2:
-       MDVP_Shimmer_dB = st.number_input("MDVP:Shimmer(dB)", min_value=0.0, max_value=10.0, step=0.1)
-    with col3:
-       Shimmer_APQ3 = st.number_input("Shimmer:APQ3", min_value=0.0, max_value=1.0, step=0.01)
-    with col1:
-       Shimmer_APQ5 = st.number_input("Shimmer:APQ5", min_value=0.0, max_value=1.0, step=0.01)
-    with col2:
-       MDVP_APQ = st.number_input("MDVP:APQ", min_value=0.0, max_value=1.0, step=0.01)
-    with col3:
-       Shimmer_DDA = st.number_input("Shimmer:DDA", min_value=0.0, max_value=1.0, step=0.01)
-   
-   
-    st.markdown("#### *Noise-to-Harmonics Ratio*")
-    col1,col2=st.columns(2)
-    with col1:
-       NHR = st.number_input("NHR - Noise-to-Harmonics Ratio", min_value=0.0, max_value=1.0, step=0.01)
-    with col2:
-       HNR = st.number_input("HNR - Harmonics-to-Noise Ratio", min_value=0.0, max_value=50.0, step=0.1)
-  
-    st.markdown("#### *Nonlinear Dynamical Complexity Measures*")
-    col1,col2,col3=st.columns(3)
-    with col1:
-   
-       RPDE = st.number_input("RPDE - Recurrence Period Density Entropy", min_value=0.0, max_value=1.0, step=0.01)
-    with col2:
-       D2 = st.number_input("D2 - Correlation Dimension", min_value=0.0, max_value=5.0, step=0.1)
-    with col3:
-       DFA = st.number_input("DFA - Detrended Fluctuation Analysis", min_value=0.0, max_value=1.0, step=0.01)
+    selected = option_menu(
+    'AI MEDICAL ASSISTANT',
+    ['AI Medical Chatbot', 'AI Image Analyzer', 'PDF Report Summarizer','Diabetes Prediction', 'Heart Disease Prediction', 'Parkinson’s Prediction'],
+    icons=['robot', 'image', 'file-earmark-text','activity', 'heart', 'person'],
+    default_index=0
+)
+    st.image("https://cdn-icons-png.flaticon.com/512/3774/3774299.png", width=200)
 
-    st.markdown("#### *Nonlinear Measures of Fundamental Frequency Variation*")
-    col1,col2,col3=st.columns(3)
+# Diabetes
+if selected == 'Diabetes Prediction':
+    st.title('🩸 Diabetes Prediction using ML')
+
+    st.subheader("Enter Patient Details:")
+    col1, col2 = st.columns(2)
+
     with col1:
-       spread1 = st.number_input("Spread1", min_value=-10.0, max_value=0.0, step=0.01)
+        Pregnancies = st.number_input('🤰 Number of Pregnancies', min_value=0)
+        Glucose = st.number_input('🧪 Glucose Level', min_value=0)
+        BloodPressure = st.number_input('🩺 Blood Pressure', min_value=0)
+        SkinThickness = st.number_input('🧍 Skin Thickness', min_value=0)
+
     with col2:
-       spread2 = st.number_input("Spread2", min_value=0.0, max_value=1.0, step=0.01)
-    with col3:
-       PPE = st.number_input("PPE - Pitch Period Entropy", min_value=0.0, max_value=1.0,step=0.01)
-   
-   
-   
-    
-    parkin_diagnosis=''
-    
-    if st.button('Parkinsons Test Result'):
-        parkin_prediction=parkin_model.predict([[MDVP_Fo_Hz,MDVP_Fhi_Hz,MDVP_Flo_Hz,MDVP_Jitter,MDVP_Jitter_Abs, 
-                            MDVP_RAP,MDVP_PPQ,Jitter_DDP,MDVP_Shimmer,MDVP_Shimmer_dB, 
-                            Shimmer_APQ3,Shimmer_APQ5,MDVP_APQ,Shimmer_DDA,NHR,HNR, 
-                            RPDE,D2,DFA,spread1,spread2,PPE]])
-    
-        if(parkin_prediction[0]==1):
-            parkin_diagnosis='The person is suffering from Parkinsons Diasease'
+        Insulin = st.number_input('💉 Insulin Level', min_value=0)
+        BMI = st.number_input('⚖️ BMI', min_value=0.0)
+        DiabetesPedigreeFunction = st.number_input('🧬 Pedigree Function', min_value=0.0)
+        Age = st.number_input('🎂 Age', min_value=0)
+
+    if st.button('🔍 Predict Diabetes'):
+        diabetes_prediction = diabetes_model.predict([[Pregnancies, Glucose, BloodPressure, SkinThickness, Insulin,
+                                                        BMI, DiabetesPedigreeFunction, Age]])
+        if diabetes_prediction[0] == 1:
+            st.error('🚨 The person is likely **diabetic**.')
         else:
-            parkin_diagnosis='The person is not suffering from Parkinsons Diasease'
-    
-    st.success(parkin_diagnosis)
-    
+            st.success('✅ The person is **not diabetic**.')
+
+# Heart
+if selected == 'Heart Disease Prediction':
+    st.title('❤️ Heart Disease Prediction using ML')
+    st.subheader("Fill in the patient’s details:")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        age = st.number_input('🎂 Age', min_value=0)
+        sex = st.selectbox('🚻 Sex', ['Female', 'Male'])
+        sex = 1 if sex == 'Male' else 0
+        cp = st.selectbox('💓 Chest Pain Type', [0, 1, 2, 3])
+
+    with col2:
+        trestbps = st.number_input('🩸 Resting BP', min_value=0)
+        chol = st.number_input('🧪 Cholesterol (mg/dl)', min_value=0)
+        fbs = st.selectbox('🍬 Fasting Sugar > 120 mg/dl?', ['No', 'Yes'])
+        fbs = 1 if fbs == 'Yes' else 0
+
+    with col3:
+        restecg = st.selectbox('📊 ECG Results', [0, 1, 2])
+        thalach = st.number_input('💗 Max Heart Rate', min_value=0)
+        exang = st.selectbox('🏃‍♂️ Exercise Angina?', ['No', 'Yes'])
+        exang = 1 if exang == 'Yes' else 0
+
+    oldpeak = st.number_input('📉 ST Depression', min_value=0.0)
+    slope = st.selectbox('📈 ST Slope', [0, 1, 2])
+    ca = st.selectbox('🔬 Major Vessels (0–3)', [0, 1, 2, 3])
+    thal = st.selectbox('🧬 Thalassemia Type', [0, 1, 2, 3])
+
+    if st.button('🔍 Predict Heart Disease'):
+        heart_prediction = heart_model.predict([[age, sex, cp, trestbps, chol, fbs, restecg,
+                                                 thalach, exang, oldpeak, slope, ca, thal]])
+        if heart_prediction[0] == 1:
+            st.error("✅ The person **does not have heart disease**.")
+        else:
+            st.success("🚨 The person **has heart disease**.")
+
+# Parkinson’s
+if selected == 'Parkinson’s Prediction':
+    st.title("🧬 Parkinson’s Disease Prediction using ML")
+    st.subheader("Provide acoustic details below:")
+
+    input_labels = [
+        'MDVP:Fo(Hz)', 'MDVP:Fhi(Hz)', 'MDVP:Flo(Hz)', 'MDVP:Jitter(%)', 'MDVP:Jitter(Abs)',
+        'MDVP:RAP', 'MDVP:PPQ', 'Jitter:DDP', 'MDVP:Shimmer', 'MDVP:Shimmer(dB)',
+        'Shimmer:APQ3', 'Shimmer:APQ5', 'MDVP:APQ', 'Shimmer:DDA', 'NHR', 'HNR',
+        'RPDE', 'DFA', 'spread1', 'spread2', 'D2', 'PPE'
+    ]
+
+    user_inputs = []
+    for i in range(0, len(input_labels), 2):
+        col1, col2 = st.columns(2)
+        with col1:
+            user_inputs.append(st.number_input(input_labels[i]))
+        if i+1 < len(input_labels):
+            with col2:
+                user_inputs.append(st.number_input(input_labels[i+1]))
+
+    if st.button("🔍 Predict Parkinson’s"):
+        parkinsons_prediction = parkinsons_model.predict([user_inputs])
+        if parkinsons_prediction[0] == 1:
+            st.error("✅ The person **does not have Parkinson’s disease**.")
+        else:
+            st.success("🚨 The person **has Parkinson’s disease**.")
+            
+                
+# AI Image Analyzer (Image + Text)
+if selected == 'AI Image Analyzer':
+    st.title("🖼️ AI Image Analyzer")
+    st.markdown("Upload a medical image and describe the symptoms. The AI will analyze both and provide a diagnosis-oriented response.")
+
+    uploaded_image = st.file_uploader("📤 Upload a Medical Image", type=["jpg", "jpeg", "png"])
+    symptom_description = st.text_area("📝 Describe the patient's symptoms or your concern")
+
+    if uploaded_image and symptom_description:
+        st.image(uploaded_image, caption="Uploaded Image")
+
+        with st.spinner("Analyzing image and context... 🤖"):
+
+            try:
+                from PIL import Image
+                import io
+
+                image = Image.open(uploaded_image).convert('RGB')
+
+                # Send multimodal input to Gemini
+                response = model.generate_content([
+                    symptom_description,
+                    image
+                ])
+
+                st.success("**AI Medical Insight:**")
+                st.write(response.text)
+
+            except Exception as e:
+                st.error(f"Error during analysis: {e}")
+
+    elif uploaded_image and not symptom_description:
+        st.info("✍️ Please describe the symptoms or issue for better analysis.")
+    elif symptom_description and not uploaded_image:
+        st.info("📸 Please upload an image to analyze.")
+
+
+
+# Medical Chatbot
+if selected == 'AI Medical Chatbot':
+    st.title("🤖 AI Medical Assistant")
+    st.markdown("Ask any health-related question and get AI-generated responses!")
+
+    user_input = st.text_input("💬 Ask your medical question:")
+
+    if user_input:
+        with st.spinner("Thinking... 💭"):
+            reply = get_chatbot_response(user_input)
+        st.success("**AI Assistant:**")
+        st.write(reply)
+
+# PDF Report Summarizer
+if selected == 'PDF Report Summarizer':
+    st.title("📄 PDF Medical Report Summarizer")
+    st.markdown("Upload a medical report in PDF format. The AI will extract and summarize key insights.")
+
+    uploaded_pdf = st.file_uploader("📤 Upload PDF Report", type=["pdf"])
+
+    if uploaded_pdf:
+        import fitz  # PyMuPDF
+        from transformers import pipeline
+
+        try:
+            # Extract text from PDF
+            with fitz.open(stream=uploaded_pdf.read(), filetype="pdf") as doc:
+                text = ""
+                for page in doc:
+                    text += page.get_text()
+
+            st.info("📑 **Extracted Text:**")
+            st.write(text[:1000] + "...")  # Show first 1000 characters
+
+            # Summarization
+            with st.spinner("Summarizing report... 🧠"):
+                summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+                summary = summarizer(text, max_length=300, min_length=30, do_sample=False)
+
+            st.success("📝 **Summary:**")
+            st.write(summary[0]['summary_text'])
+
+        except Exception as e:
+            st.error(f"Error: {e}")
+
+
+st.markdown(
+    """
+    <style>
+    .developer-note {
+        position: fixed;
+        bottom: 10px;
+        right: 15px;
+        font-size: 14px;
+        color: gray;
+        z-index: 9999;
+    }
+    </style>
+    <div class="developer-note">
+        Developed by <strong>Arshiya Nandy</strong>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
+
