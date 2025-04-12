@@ -227,7 +227,7 @@ st.markdown(
     }
     </style>
     <div class="developer-note">
-        Developed by <strong>Arshiya Nandy</strong>
+        Developed by <strong>Suprava Modak</strong>
     </div>
     """,
     unsafe_allow_html=True
